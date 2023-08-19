@@ -88,7 +88,6 @@ docker-build:
           name: docker-image
           path: /tmp/docker-image.tar
           retention-days: 1
-
   docker-trivy-vuln:
     name: Trivy vulnerability scanner
     runs-on: ubuntu-latest
