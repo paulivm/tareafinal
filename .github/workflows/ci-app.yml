@@ -44,7 +44,7 @@ jobs:
           fail-build: false
           output-format: table
 
-    docker-build:      
+docker-build:      
     name: Build Docker image
     outputs:
       full_docker_image_tag: ${{ steps.build_image.outputs.full_docker_image_tag }}
@@ -89,7 +89,7 @@ jobs:
           path: /tmp/docker-image.tar
           retention-days: 1
 
-  docker-trivy-vuln:
+docker-trivy-vuln:
     name: Trivy vulnerability scanner
     runs-on: ubuntu-latest
     needs: [docker-build]
@@ -112,3 +112,26 @@ jobs:
           exit-code: '0'
           ignore-unfixed: false
           severity: 'UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL'
+
+  docker-grype:
+    name: Grype (Anchore) Docker Scan
+    runs-on: ubuntu-latest
+    needs: [docker-build]
+    steps:
+      - name: Download artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: docker-image
+          path: /tmp
+
+      - name: Load Docker image
+        run: |
+          docker load --input /tmp/docker-image.tar
+
+      - name: Scan image wih Grype (Anchore)
+        id: scan-image
+        uses: anchore/scan-action@v3
+        with:
+          image: "${{ needs.docker-build.outputs.full_docker_image_tag }}"
+          output-format: table
+          fail-build: true
